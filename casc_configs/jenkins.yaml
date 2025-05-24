@@ -1,0 +1,60 @@
+jenkins:
+  systemMessage: "Jenkins configurado con Configuration as Code - Entorno simplificado"
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+  
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  
+  numExecutors: 0
+  mode: EXCLUSIVE
+  slaveAgentPort: 50000
+  
+  clouds:
+    - docker:
+        name: "docker"
+        dockerApi:
+          dockerHost:
+            uri: "unix:///var/run/docker.sock"
+          connectTimeout: 60
+        templates:
+          - labelString: "docker-agent"
+            dockerTemplateBase:
+              image: "jenkins/agent:latest-jdk17"
+              mounts:
+                - "type=volume,source=jenkins-agent-workspace,destination=/home/jenkins/agent"
+              environmentsString: |
+                JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+            remoteFs: "/home/jenkins/agent"
+            connector:
+              attach:
+                user: "jenkins"
+            instanceCapStr: "5"
+            retentionStrategy:
+              idleMinutes: 10
+          - labelString: "docker-dind-agent"
+            dockerTemplateBase:
+              image: "docker:24.0.8-dind"
+              privileged: true
+              mounts:
+                - "type=volume,source=jenkins-docker-data,destination=/var/lib/docker"
+              environmentsString: |
+                DOCKER_TLS_CERTDIR=
+            remoteFs: "/home/jenkins/agent"
+            connector:
+              attach:
+                user: "root"
+            instanceCapStr: "1"
+            retentionStrategy:
+              idleMinutes: 10
+
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"

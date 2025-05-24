@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  jenkins-controller:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins-controller
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      - CASC_JENKINS_CONFIG_RELOAD_EVERY_MINUTES=5
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./casc_configs:/var/jenkins_home/casc_configs
+    networks:
+      - jenkins-net
+    restart: always
+
+  docker-dind:
+    image: docker:24.0.8-dind
+    container_name: docker-dind
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - jenkins-docker-certs:/certs/client
+      - jenkins-docker-data:/var/lib/docker
+    networks:
+      - jenkins-net
+    restart: always
+
+volumes:
+  jenkins_home:
+  jenkins-docker-certs:
+  jenkins-docker-data:
+
+networks:
+  jenkins-net:
+    driver: bridge
