@@ -19,9 +19,9 @@ services:
       - jenkins-net
     restart: always
 
-  docker-dind:
-    image: docker:24.0.8-dind
-    container_name: docker-dind
+  jenkins-agent:
+    image: docker:24.0.7-dind
+    container_name: jenkins-agent
     privileged: true
     environment:
       - DOCKER_TLS_CERTDIR=/certs
